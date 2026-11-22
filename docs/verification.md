@@ -11,7 +11,7 @@ Command (from the repository root, Blender-bundled Python 3.13.13):
 & "C:\Program Files\Blender Foundation\Blender 5.2\5.2\python\bin\python.exe" -m unittest discover -s tests -v
 ```
 
-Result: **94 tests, OK (skipped=2)** in about 22 seconds. The two skips are the
+Result: **96 tests, OK (skipped=2)** in about 20 seconds. The two skips are the
 real-window GUI case (this Python build has no Tkinter) and its skip-path
 counterpart. Core, remote, engine, compatibility and CLI tests run for real.
 
@@ -35,21 +35,22 @@ Coverage:
 
 Workflow: `.github/workflows/build.yml`.
 
-Successful run: [45048062352](https://github.com/Toobe53/goo-bridge/actions/runs/45048062352)
-(head `8ef1627`). All six jobs passed:
+Successful run: [45052199623](https://github.com/Toobe53/goo-bridge/actions/runs/45052199623)
+(head `97463f4`). All seven jobs passed:
 
 | Job | What it proves |
 |---|---|
 | `unit-ubuntu-latest` | Python 3.12 unit suite, wheel build |
 | `unit-windows-latest` | Python 3.12 unit suite, wheel build |
 | `unit-macos-latest` | Python 3.12 unit suite, wheel build |
-| `blender-ubuntu-latest` | Blender 5.2.3 download + full 94-test suite under Xvfb |
-| `blender-windows-latest` | Blender 5.2.3 + Mesa llvmpipe + full 94-test suite |
-| `blender-macos-latest` | Blender 5.2.3 arm64 + Metal + full 94-test suite |
+| `unit-python-3.11` | declared Python 3.11 floor |
+| `blender-ubuntu-latest` | Blender 5.2.3 download/cache + full 96-test suite under Xvfb |
+| `blender-windows-latest` | Blender 5.2.3 + Mesa llvmpipe + full 96-test suite |
+| `blender-macos-latest` | Blender 5.2.3 arm64 + Metal + full 96-test suite |
 
-The CI unit suite reports 92 tests with 6 skips; the difference from the local
-94 is Blender-dependent tests that are skipped on the unit-test runners and run
-in the dedicated Blender jobs. Each Blender job reports `Ran 94 tests ... OK
+The CI unit suite reports 94 tests with 6 skips; the difference from the local
+96 is Blender-dependent tests that are skipped on the unit-test runners and run
+in the dedicated Blender jobs. Each Blender job reports `Ran 96 tests ... OK
 (skipped=1)` with `GOO_BRIDGE_BLENDER` set, then `goo-bridge doctor --json`; the
 Windows job uses `ssciwr/setup-mesa-dist-win@v3` with
 `GALLIUM_DRIVER=llvmpipe`.

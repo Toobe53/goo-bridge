@@ -94,6 +94,7 @@ goo-bridge remote render --profile studio scene.blend -o renders/
 - [远程渲染](docs/remote.md) — 服务器配置与排错
 - [CLI 参考](docs/cli.md) — 每个命令和选项
 - [验证报告](docs/verification.md) — 测试、CI 矩阵与发布校验
+- [优化记录](docs/optimizations.md) — 十轮加固与证据
 
 ## 开发
 

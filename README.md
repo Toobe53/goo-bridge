@@ -95,6 +95,7 @@ Use `--json` on any command for machine-readable output. Run
 - [Remote rendering](docs/remote.md) — server setup and troubleshooting
 - [CLI reference](docs/cli.md) — every command and option
 - [Verification](docs/verification.md) — tests, CI matrix and release checks
+- [Optimization rounds](docs/optimizations.md) — ten hardening changes and evidence
 
 ## Development
 

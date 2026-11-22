@@ -72,6 +72,7 @@ class CompatCliTests(unittest.TestCase):
             "docs/cli.md",
             "docs/compatibility.md",
             "docs/verification.md",
+            "docs/optimizations.md",
         ]
         for name in docs:
             self.assertTrue((root / name).is_file(), name)
