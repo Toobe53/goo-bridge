@@ -31,6 +31,13 @@ python -m pip install .
 goo-bridge doctor
 ```
 
+Or install the published wheel:
+
+```bash
+python -m pip install https://github.com/Toobe53/goo-bridge/releases/download/v0.1.0/goo_bridge-0.1.0-py3-none-any.whl
+goo-bridge doctor
+```
+
 Requires Python 3.11+ and Blender 5.2.x. Set `GOO_BRIDGE_BLENDER` if Blender is
 not in a default location:
 
@@ -86,6 +93,7 @@ Use `--json` on any command for machine-readable output. Run
 - [Compatibility matrix](docs/compatibility.md) — all 39 items and levels
 - [Remote rendering](docs/remote.md) — server setup and troubleshooting
 - [CLI reference](docs/cli.md) — every command and option
+- [Verification](docs/verification.md) — tests, CI matrix and release checks
 
 ## Development
 

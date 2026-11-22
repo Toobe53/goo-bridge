@@ -22,6 +22,16 @@ python -m pip install .
 
 ### 从 wheel / From a wheel
 
+从 [Releases](https://github.com/Toobe53/goo-bridge/releases) 下载 `goo_bridge-0.1.0-py3-none-any.whl`
+后安装；也可以使用本次 CI 构建的 Actions Artifact：
+
+```bash
+python -m pip install goo_bridge-0.1.0-py3-none-any.whl
+```
+
+Download the wheel from [Releases](https://github.com/Toobe53/goo-bridge/releases),
+or from the `goo-bridge-wheel-*` Actions artifact for this commit, then run:
+
 ```bash
 python -m pip install goo_bridge-0.1.0-py3-none-any.whl
 ```
