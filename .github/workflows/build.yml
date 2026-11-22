@@ -76,6 +76,12 @@ jobs:
         with:
           version: "26.3.0"
           deployment-choice: "1"
+      - name: Cache Blender 5.2.3
+        id: blender-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender
+          key: blender-5.2.3-${{ runner.os }}-${{ runner.arch }}
       - name: Download Blender 5.2.3
         id: blender
         env:
@@ -84,7 +90,7 @@ jobs:
           python tools/install_blender.py --dest "%GOO_DEST%" --json > "%RUNNER_TEMP%/blender.json"
           python -c "import json,os; p=json.load(open(os.environ['RUNNER_TEMP']+'/blender.json')); open(os.environ['GITHUB_ENV'],'a').write('GOO_BRIDGE_BLENDER='+p['path']+'\n'); print(p)"
         shell: cmd
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && steps.blender-cache.outputs.cache-hit != 'true'
       - name: Download Blender 5.2.3
         env:
           GOO_DEST: ${{ runner.temp }}/blender
@@ -92,7 +98,12 @@ jobs:
           python tools/install_blender.py --dest "$GOO_DEST" --json > "$RUNNER_TEMP/blender.json"
           python -c "import json,os; p=json.load(open(os.environ['RUNNER_TEMP']+'/blender.json')); open(os.environ['GITHUB_ENV'],'a').write('GOO_BRIDGE_BLENDER='+p['path']+'\n'); print(p)"
         shell: bash
-        if: runner.os != 'Windows'
+        if: runner.os != 'Windows' && steps.blender-cache.outputs.cache-hit != 'true'
+      - name: Locate cached Blender
+        if: steps.blender-cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          python -c "import os; from pathlib import Path; root=Path(os.environ['RUNNER_TEMP'])/'blender'; hits=[p for p in root.rglob('*') if p.is_file() and p.name in ('blender.exe','blender','Blender')]; p=sorted(hits)[0]; open(os.environ['GITHUB_ENV'],'a').write('GOO_BRIDGE_BLENDER='+str(p)+'\n'); print(p)"
       - name: Full test suite with Blender (Linux)
         if: runner.os == 'Linux'
         env:
