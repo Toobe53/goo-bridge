@@ -43,6 +43,14 @@ def config_path() -> Path:
     return home_directory() / "config.json"
 
 
+def _as_port(value: Any, default: int = 22) -> int:
+    try:
+        port = int(value)
+    except (TypeError, ValueError):
+        return default
+    return port if 1 <= port <= 65535 else default
+
+
 @dataclass
 class RemoteProfile:
     """A remote render host as stored in ``config.json``."""
@@ -65,7 +73,7 @@ class RemoteProfile:
             name=str(data.get("name", "")),
             host=str(data.get("host", "")),
             user=str(data.get("user", "")),
-            port=int(data.get("port", 22)),
+            port=_as_port(data.get("port", 22)),
             key=str(data.get("key", "")),
             blender=str(data.get("blender", "blender")),
             workspace=str(data.get("workspace", "~/.goo-bridge")),
@@ -92,11 +100,15 @@ class Config:
             for item in data.get("remote", [])
             if isinstance(item, dict)
         ]
+        try:
+            version = int(data.get("version", CONFIG_VERSION))
+        except (TypeError, ValueError):
+            version = CONFIG_VERSION
         return cls(
             blender=str(data.get("blender", "")),
             language=str(data.get("language", "en_US")),
             remote=profiles,
-            version=int(data.get("version", CONFIG_VERSION)),
+            version=version,
         )
 
     def profile(self, name: str) -> RemoteProfile:

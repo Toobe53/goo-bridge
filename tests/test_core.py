@@ -39,6 +39,26 @@ class ConfigTests(unittest.TestCase):
             loaded = load_config(Path(temp) / "none.json")
             self.assertEqual(loaded.remote, [])
 
+    def test_invalid_numeric_fields_fall_back(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "config.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "version": "bad",
+                        "remote": [
+                            {"name": "x", "host": "h", "user": "u", "port": "bad"},
+                            {"name": "y", "host": "h", "user": "u", "port": 70000},
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            loaded = load_config(path)
+        self.assertEqual(loaded.version, 1)
+        self.assertEqual(loaded.profile("x").port, 22)
+        self.assertEqual(loaded.profile("y").port, 22)
+
 
 class JobTests(unittest.TestCase):
     def test_roundtrip(self) -> None:
