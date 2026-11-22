@@ -10,6 +10,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+from .fsutil import atomic_write_text
+
 
 APP_NAME = "goo-bridge"
 CONFIG_VERSION = 1
@@ -130,9 +132,8 @@ def load_config(path: Path | None = None) -> Config:
 
 def save_config(config: Config, path: Path | None = None) -> Path:
     target = path or config_path()
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(
+    atomic_write_text(
+        target,
         json.dumps(config.to_dict(), indent=2, ensure_ascii=True) + "\n",
-        encoding="utf-8",
     )
     return target
