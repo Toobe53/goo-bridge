@@ -10,6 +10,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .fsutil import atomic_write_text
+
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -52,10 +54,9 @@ class RenderJob:
         return cls(**{key: value for key, value in data.items() if key in known})
 
     def write(self, path: Path) -> Path:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
+        atomic_write_text(
+            path,
             json.dumps(self.to_dict(), indent=2, ensure_ascii=True) + "\n",
-            encoding="utf-8",
         )
         return path
 
