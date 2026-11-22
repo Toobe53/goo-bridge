@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "goo-bridge"
+version = "0.1.0"
+description = "Cross-platform GUI/CLI bridge for GOO-style NPR rendering with local and remote headless Blender"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "GPL-3.0-or-later"}
+authors = [{name = "GOO Bridge contributors"}]
+keywords = ["blender", "npr", "render", "remote", "goo-engine"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: X11 Applications",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: MacOS X",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Graphics :: 3D Rendering",
+]
+dependencies = []
+
+[project.scripts]
+goo-bridge = "goo_bridge.cli:main"
+
+[tool.setuptools]
+packages = ["goo_bridge", "goo_bridge.data", "goo_bridge.scripts"]
+
+[tool.setuptools.package-data]
+"goo_bridge.data" = ["*.json"]
+"goo_bridge.scripts" = ["*.py"]
