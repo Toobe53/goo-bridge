@@ -1,0 +1,98 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: unit-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Linux Tk and Xvfb
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y python3-tk xvfb
+      - name: Install package
+        run: python -m pip install --upgrade pip && python -m pip install -e .
+      - name: Unit tests
+        if: runner.os != 'Linux'
+        env:
+          GOO_BRIDGE_HOME: ${{ runner.temp }}/goo-bridge-home
+        run: python -m unittest discover -s tests -v
+      - name: Unit tests with Xvfb
+        if: runner.os == 'Linux'
+        env:
+          GOO_BRIDGE_HOME: ${{ runner.temp }}/goo-bridge-home
+        run: xvfb-run -a python -m unittest discover -s tests -v
+      - name: Build wheel
+        run: python -m pip wheel --no-deps -w dist .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: goo-bridge-wheel-${{ matrix.os }}
+          path: dist/*.whl
+          if-no-files-found: error
+
+  blender:
+    name: blender-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Linux Xvfb
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+      - name: Install package
+        run: python -m pip install --upgrade pip && python -m pip install -e .
+      - name: Install Mesa software OpenGL (Windows)
+        if: runner.os == 'Windows'
+        uses: ssciwr/setup-mesa-dist-win@v3
+        with:
+          version: "26.3.0"
+          deployment-choice: "1"
+      - name: Download Blender 5.2.3
+        id: blender
+        env:
+          GOO_DEST: ${{ runner.temp }}/blender
+        run: |
+          python tools/install_blender.py --dest "%GOO_DEST%" --json > "%RUNNER_TEMP%/blender.json"
+          python -c "import json,os; p=json.load(open(os.environ['RUNNER_TEMP']+'/blender.json')); open(os.environ['GITHUB_ENV'],'a').write('GOO_BRIDGE_BLENDER='+p['path']+'\n'); print(p)"
+        shell: cmd
+        if: runner.os == 'Windows'
+      - name: Download Blender 5.2.3
+        env:
+          GOO_DEST: ${{ runner.temp }}/blender
+        run: |
+          python tools/install_blender.py --dest "$GOO_DEST" --json > "$RUNNER_TEMP/blender.json"
+          python -c "import json,os; p=json.load(open(os.environ['RUNNER_TEMP']+'/blender.json')); open(os.environ['GITHUB_ENV'],'a').write('GOO_BRIDGE_BLENDER='+p['path']+'\n'); print(p)"
+        shell: bash
+        if: runner.os != 'Windows'
+      - name: Blender integration (Linux)
+        if: runner.os == 'Linux'
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: llvmpipe
+        run: xvfb-run -a python -m unittest tests.test_core.CliTests.test_analyze_render_demo -v
+      - name: Blender integration (macOS/Windows)
+        if: runner.os != 'Linux'
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: llvmpipe
+        run: python -m unittest tests.test_core.CliTests.test_analyze_render_demo -v
+      - name: Doctor
+        run: python -m goo_bridge doctor --json

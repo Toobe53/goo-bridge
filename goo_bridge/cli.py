@@ -144,6 +144,36 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_compat(args: argparse.Namespace) -> int:
+    from .compat import scan_blend, write_html as write_compat_html, write_json as write_compat_json
+
+    report: dict[str, Any] = {}
+    if args.analysis:
+        source = Path(args.analysis).resolve()
+        try:
+            report = json.loads(source.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            return _error(f"cannot read analysis: {exc}", as_json=args.json)
+    result = scan_blend(report)
+    output = Path(args.output).resolve() if args.output else None
+    written: Optional[str] = None
+    if output:
+        if output.suffix.lower() in {".json"}:
+            written = str(write_compat_json(result, output))
+        else:
+            written = str(write_compat_html(result, output))
+    if args.json:
+        _json({"ok": True, "written": written, **result})
+    else:
+        counts = result["matrix"]["counts"]
+        print(f"compatibility: {result['total']} items / {counts['L2']} L2 / {counts['L1']} L1 / {counts['L0']} L0")
+        for item in result["items"]:
+            print(f"  {item['id']:>3}  {item['level']}  {item['name']}")
+        if written:
+            print(f"report: {written}")
+    return 0
+
+
 def cmd_verify(args: argparse.Namespace) -> int:
     payload = verify_dist(Path(args.dist).resolve())
     if args.json:
@@ -206,6 +236,12 @@ def build_parser() -> argparse.ArgumentParser:
     report_cmd.add_argument("--json", action="store_true")
     report_cmd.set_defaults(func=cmd_report)
 
+    compat_cmd = sub.add_parser("compat", help="generate the 39-item L2/L1/L0 compatibility report")
+    compat_cmd.add_argument("--analysis", help="optional analysis JSON from `goo-bridge analyze`")
+    compat_cmd.add_argument("-o", "--output", default="compat.html")
+    compat_cmd.add_argument("--json", action="store_true")
+    compat_cmd.set_defaults(func=cmd_compat)
+
     verify_cmd = sub.add_parser("verify", help="verify SHA256SUMS and release archives")
     verify_cmd.add_argument("--dist", default="dist")
     verify_cmd.add_argument("--json", action="store_true")
@@ -214,7 +250,9 @@ def build_parser() -> argparse.ArgumentParser:
     gui_cmd = sub.add_parser("gui", help="open the desktop application")
     gui_cmd.set_defaults(func=cmd_gui)
 
-    remote = sub.add_parser("remote", help="remote render host commands")
+    # No add_help: ``remote --help``/``-h`` must reach ``remote.cli_remote`` so
+    # the inner parser (add/list/test/render/status/fetch/clean) prints help.
+    remote = sub.add_parser("remote", help="remote render host commands", add_help=False)
     remote.add_argument("remote_args", nargs=argparse.REMAINDER)
     remote.set_defaults(func=cmd_remote)
     return parser
@@ -222,8 +260,18 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Optional[list[str]] = None) -> int:
     _configure_stdio()
+    raw = list(sys.argv[1:] if argv is None else argv)
+    # ``remote --help`` / ``remote -h`` / bare ``remote`` must reach the inner
+    # parser (add/list/test/render/status/fetch/clean); the REMAINDER positional
+    # would otherwise treat a leading option as an outer-parser option.
+    if raw[:1] == ["remote"] and (len(raw) == 1 or raw[1] in {"-h", "--help"}):
+        try:
+            from .remote import cli_remote
+        except Exception as exc:  # pragma: no cover - import guard
+            return _error(f"remote support is not available: {exc}")
+        return int(cli_remote(raw[1:]))
     parser = build_parser()
-    args = parser.parse_args(argv)
+    args = parser.parse_args(raw)
     try:
         return int(args.func(args))
     except KeyboardInterrupt:

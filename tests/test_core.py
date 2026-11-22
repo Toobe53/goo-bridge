@@ -112,9 +112,6 @@ class CliTests(unittest.TestCase):
         self.assertIn("blender", payload)
 
     def test_analyze_render_demo(self) -> None:
-        demo = ROOT.parent / "goo-port" / "tests" / "assets" / "demo_lightgroups.blend"
-        if not demo.is_file():
-            self.skipTest("demo scene not present")
         try:
             info = find_blender()
         except BlenderError as exc:
@@ -125,6 +122,10 @@ class CliTests(unittest.TestCase):
                 "import bpy; "
                 "g = bpy.data.node_groups.new('GOO Test', 'ShaderNodeTree'); "
                 "g.use_fake_user = True; "
+                "bpy.ops.mesh.primitive_cube_add(); "
+                "bpy.ops.object.camera_add(location=(7, -7, 5), rotation=(1.1, 0, 0.8)); "
+                "bpy.context.scene.camera = bpy.context.object; "
+                "bpy.ops.object.light_add(type='SUN', location=(3, -3, 5)); "
                 f"bpy.ops.wm.save_as_mainfile(filepath={str(fixture)!r})"
             )
             made = subprocess.run(
@@ -145,7 +146,7 @@ class CliTests(unittest.TestCase):
             out = Path(temp) / "out"
             rendered = self._run(
                 "render",
-                str(demo),
+                str(fixture),
                 "-o",
                 str(out),
                 "--samples",
