@@ -11,6 +11,7 @@ files, and reports which GOO features can be approximated at L2, L1 or L0.
 [![build](https://github.com/Toobe53/goo-bridge/actions/workflows/build.yml/badge.svg)](https://github.com/Toobe53/goo-bridge/actions/workflows/build.yml)
 
 **New here?** Start with the bilingual [user tutorial](docs/tutorial.md).
+[简体中文](README.zh-CN.md)
 
 ## Status
 

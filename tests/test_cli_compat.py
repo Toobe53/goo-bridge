@@ -64,12 +64,24 @@ class CompatCliTests(unittest.TestCase):
 
     def test_docs_links_exist(self) -> None:
         root = Path(__file__).resolve().parents[1]
-        docs = ["README.md", "docs/tutorial.md", "docs/remote.md", "docs/cli.md", "docs/compatibility.md"]
+        docs = [
+            "README.md",
+            "README.zh-CN.md",
+            "docs/tutorial.md",
+            "docs/remote.md",
+            "docs/cli.md",
+            "docs/compatibility.md",
+            "docs/verification.md",
+        ]
         for name in docs:
             self.assertTrue((root / name).is_file(), name)
         text = (root / "docs/tutorial.md").read_text(encoding="utf-8")
         self.assertIn("goo-bridge", text)
         self.assertIn("远程渲染", text)
+        chinese = (root / "README.zh-CN.md").read_text(encoding="utf-8")
+        self.assertIn("安装", chinese)
+        self.assertIn("远程渲染", chinese)
+        self.assertIn("39 项", chinese)
 
 
 if __name__ == "__main__":
