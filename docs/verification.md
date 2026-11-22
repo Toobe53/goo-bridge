@@ -49,8 +49,13 @@ Successful run: [45047450634](https://github.com/Toobe53/goo-bridge/actions/runs
 
 The CI unit suite reports 92 tests with 6 skips; the difference from the local
 94 is Blender-dependent tests that are skipped on the unit-test runners and run
-in the dedicated Blender jobs. The Windows Blender job uses
+in the dedicated Blender jobs. Each Blender job now runs the full suite with
+`GOO_BRIDGE_BLENDER` set, then `goo-bridge doctor --json`; the Windows job uses
 `ssciwr/setup-mesa-dist-win@v3` with `GALLIUM_DRIVER=llvmpipe`.
+
+The unit job also uninstalls the editable package, installs the freshly built
+wheel, moves to a neutral directory and runs `--version` plus `compat --json`,
+asserting 39 items and 13/15/11 counts. This catches missing package data.
 
 ## Wheel
 

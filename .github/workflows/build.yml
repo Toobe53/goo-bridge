@@ -36,6 +36,17 @@ jobs:
         run: xvfb-run -a python -m unittest discover -s tests -v
       - name: Build wheel
         run: python -m pip wheel --no-deps -w dist .
+      - name: Smoke-test built wheel
+        shell: bash
+        env:
+          GOO_BRIDGE_HOME: ${{ runner.temp }}/goo-bridge-home
+        run: |
+          python -m pip uninstall -y goo-bridge
+          python -m pip install --no-deps dist/*.whl
+          cd "$RUNNER_TEMP"
+          goo-bridge --version
+          goo-bridge compat -o compat.html --json > compat.json
+          python -c "import json; p=json.load(open('compat.json')); assert p['total'] == 39, p; assert p['matrix']['counts'] == {'L2': 13, 'L1': 15, 'L0': 11}, p; print('wheel smoke OK')"
       - uses: actions/upload-artifact@v4
         with:
           name: goo-bridge-wheel-${{ matrix.os }}
@@ -82,17 +93,19 @@ jobs:
           python -c "import json,os; p=json.load(open(os.environ['RUNNER_TEMP']+'/blender.json')); open(os.environ['GITHUB_ENV'],'a').write('GOO_BRIDGE_BLENDER='+p['path']+'\n'); print(p)"
         shell: bash
         if: runner.os != 'Windows'
-      - name: Blender integration (Linux)
+      - name: Full test suite with Blender (Linux)
         if: runner.os == 'Linux'
         env:
+          GOO_BRIDGE_HOME: ${{ runner.temp }}/goo-bridge-home
           LIBGL_ALWAYS_SOFTWARE: "1"
           GALLIUM_DRIVER: llvmpipe
-        run: xvfb-run -a python -m unittest tests.test_core.CliTests.test_analyze_render_demo -v
-      - name: Blender integration (macOS/Windows)
+        run: xvfb-run -a python -m unittest discover -s tests -v
+      - name: Full test suite with Blender (macOS/Windows)
         if: runner.os != 'Linux'
         env:
+          GOO_BRIDGE_HOME: ${{ runner.temp }}/goo-bridge-home
           LIBGL_ALWAYS_SOFTWARE: "1"
           GALLIUM_DRIVER: llvmpipe
-        run: python -m unittest tests.test_core.CliTests.test_analyze_render_demo -v
+        run: python -m unittest discover -s tests -v
       - name: Doctor
         run: python -m goo_bridge doctor --json
