@@ -27,6 +27,8 @@ import json
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
+from .fsutil import atomic_write_text
+
 __all__ = [
     "CompatError",
     "DATA_FILE",
@@ -381,10 +383,9 @@ def level_summary(result: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
 def write_json(result: Mapping[str, Any], path: Path | str) -> Path:
     """Write the machine-readable compatibility document."""
     destination = Path(path)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(
+    atomic_write_text(
+        destination,
         json.dumps(result, indent=2, ensure_ascii=False, sort_keys=False) + "\n",
-        encoding="utf-8",
     )
     return destination
 
@@ -520,8 +521,7 @@ across 39 bridge-specific items; every item is red, yellow or green by design.</
 def write_html(result: Mapping[str, Any], path: Path | str) -> Path:
     """Write the standalone HTML report."""
     destination = Path(path)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(render_html(result), encoding="utf-8")
+    atomic_write_text(destination, render_html(result))
     return destination
 
 
