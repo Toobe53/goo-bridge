@@ -62,8 +62,15 @@ def unpack(archive: Path, dest: Path, key: str) -> Path:
             handle.extractall(dest)
         return _find(dest, "blender.exe")
     if key == "linux":
-        with tarfile.open(archive, "r:xz") as handle:
-            handle.extractall(dest)
+        # The official archive contains symlinked add-on payloads; the system
+        # tar preserves those links reliably (Python's tarfile has hit
+        # permission errors on some Blender 5.2 archives).
+        tar = shutil.which("tar")
+        if tar:
+            subprocess.run([tar, "-xJf", str(archive), "-C", str(dest)], check=True)
+        else:
+            with tarfile.open(archive, "r:xz") as handle:
+                handle.extractall(dest)
         return _find(dest, "blender")
     if key.startswith("macos"):
         mount = Path(tempfile.mkdtemp(prefix="goo-bridge-dmg-"))

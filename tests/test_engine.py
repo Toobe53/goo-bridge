@@ -161,7 +161,7 @@ class AdapterTests(unittest.TestCase):
             self.assertTrue(result.ok, result.get("error"))
             self.assertEqual(result.mode, "engine")
             self.assertTrue(target.is_file())
-            self.assertEqual(result["blend_out"], str(target))
+            self.assertTrue(os.path.samefile(result["blend_out"], target))
             self.assertEqual(result["engine"]["version"], "9.9.9")
 
     def test_render_scene_through_fake_engine(self) -> None:
