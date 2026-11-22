@@ -35,23 +35,24 @@ Coverage:
 
 Workflow: `.github/workflows/build.yml`.
 
-Successful run: [45047450634](https://github.com/Toobe53/goo-bridge/actions/runs/45047450634)
-(head `0c76bc3`). All six jobs passed:
+Successful run: [45048062352](https://github.com/Toobe53/goo-bridge/actions/runs/45048062352)
+(head `8ef1627`). All six jobs passed:
 
 | Job | What it proves |
 |---|---|
 | `unit-ubuntu-latest` | Python 3.12 unit suite, wheel build |
 | `unit-windows-latest` | Python 3.12 unit suite, wheel build |
 | `unit-macos-latest` | Python 3.12 unit suite, wheel build |
-| `blender-ubuntu-latest` | Blender 5.2.3 download + headless render under Xvfb |
-| `blender-windows-latest` | Blender 5.2.3 + Mesa llvmpipe software OpenGL |
-| `blender-macos-latest` | Blender 5.2.3 arm64 + Metal render |
+| `blender-ubuntu-latest` | Blender 5.2.3 download + full 94-test suite under Xvfb |
+| `blender-windows-latest` | Blender 5.2.3 + Mesa llvmpipe + full 94-test suite |
+| `blender-macos-latest` | Blender 5.2.3 arm64 + Metal + full 94-test suite |
 
 The CI unit suite reports 92 tests with 6 skips; the difference from the local
 94 is Blender-dependent tests that are skipped on the unit-test runners and run
-in the dedicated Blender jobs. Each Blender job now runs the full suite with
-`GOO_BRIDGE_BLENDER` set, then `goo-bridge doctor --json`; the Windows job uses
-`ssciwr/setup-mesa-dist-win@v3` with `GALLIUM_DRIVER=llvmpipe`.
+in the dedicated Blender jobs. Each Blender job reports `Ran 94 tests ... OK
+(skipped=1)` with `GOO_BRIDGE_BLENDER` set, then `goo-bridge doctor --json`; the
+Windows job uses `ssciwr/setup-mesa-dist-win@v3` with
+`GALLIUM_DRIVER=llvmpipe`.
 
 The unit job also uninstalls the editable package, installs the freshly built
 wheel, moves to a neutral directory and runs `--version` plus `compat --json`,
