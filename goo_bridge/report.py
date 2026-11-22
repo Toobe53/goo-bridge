@@ -8,6 +8,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from .fsutil import atomic_write_text
+
 
 def summarize(analysis: dict[str, Any]) -> dict[str, Any]:
     groups = analysis.get("goo_groups") or []
@@ -27,8 +29,7 @@ def summarize(analysis: dict[str, Any]) -> dict[str, Any]:
 
 
 def write_json(report: dict[str, Any], path: Path) -> Path:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(report, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
+    atomic_write_text(path, json.dumps(report, indent=2, ensure_ascii=True) + "\n")
     return path
 
 
@@ -61,5 +62,5 @@ td,th{{border:1px solid #ccc;padding:.35rem .5rem;text-align:left}}
 </body></html>
 """
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(document, encoding="utf-8")
+    atomic_write_text(path, document)
     return path
