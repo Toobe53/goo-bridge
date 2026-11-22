@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import subprocess
 import sys
@@ -14,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from goo_bridge import __version__  # noqa: E402
+from goo_bridge.assets import from_analysis  # noqa: E402
 from goo_bridge.blender import BlenderError, find_blender  # noqa: E402
 from goo_bridge.config import Config, RemoteProfile, load_config, save_config  # noqa: E402
 from goo_bridge.jobs import RenderJob  # noqa: E402
@@ -82,6 +84,28 @@ class ReportTests(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
         self.assertIn("GOO Shader Info", text)
         self.assertIn("demo.blend", text)
+
+
+class AssetTests(unittest.TestCase):
+    def test_parallel_inventory_preserves_order_and_hashes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            paths = []
+            for index in range(5):
+                path = Path(temp) / f"asset-{index}.bin"
+                path.write_bytes(f"payload-{index}".encode("ascii"))
+                paths.append(path)
+            report = {
+                "external_files": [
+                    {"path": str(path), "kind": "texture", "name": path.name}
+                    for path in paths
+                ]
+            }
+            expected_hashes = [
+                hashlib.sha256(path.read_bytes()).hexdigest() for path in paths
+            ]
+            assets = from_analysis(report)
+        self.assertEqual([asset.path for asset in assets], [str(path) for path in paths])
+        self.assertEqual([asset.sha256 for asset in assets], expected_hashes)
 
 
 class CliTests(unittest.TestCase):

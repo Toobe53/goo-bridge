@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import hashlib
+import os
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Iterable
@@ -30,27 +32,37 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _from_item(item: dict[str, Any]) -> Asset | None:
+    path = str(item.get("path") or "")
+    if not path:
+        return None
+    candidate = Path(path).expanduser()
+    exists = candidate.is_file()
+    return Asset(
+        path=str(candidate),
+        kind=str(item.get("kind") or ""),
+        name=str(item.get("name") or ""),
+        exists=exists,
+        size=candidate.stat().st_size if exists else 0,
+        sha256=sha256_file(candidate) if exists else "",
+    )
+
+
 def from_analysis(report: dict[str, Any]) -> list[Asset]:
-    assets: list[Asset] = []
-    for item in report.get("external_files") or []:
-        if not isinstance(item, dict):
-            continue
-        path = str(item.get("path") or "")
-        if not path:
-            continue
-        candidate = Path(path).expanduser()
-        exists = candidate.is_file()
-        assets.append(
-            Asset(
-                path=str(candidate),
-                kind=str(item.get("kind") or ""),
-                name=str(item.get("name") or ""),
-                exists=exists,
-                size=candidate.stat().st_size if exists else 0,
-                sha256=sha256_file(candidate) if exists else "",
-            )
-        )
-    return assets
+    items = [
+        item
+        for item in (report.get("external_files") or [])
+        if isinstance(item, dict) and str(item.get("path") or "")
+    ]
+    if len(items) <= 2:
+        return [asset for asset in (_from_item(item) for item in items) if asset]
+
+    # Large scenes can reference hundreds of textures.  hashlib releases the
+    # GIL while hashing, so a bounded thread pool cuts wall-clock time without
+    # changing ordering or error behaviour.
+    workers = min(8, max(1, (os.cpu_count() or 1)))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        return [asset for asset in pool.map(_from_item, items) if asset]
 
 
 def missing(assets: Iterable[Asset]) -> list[Asset]:
