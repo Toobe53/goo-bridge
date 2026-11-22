@@ -29,6 +29,7 @@ from typing import Any, Callable, Iterable, Optional, Sequence
 
 from . import __version__
 from .assets import Asset, manifest, sha256_file
+from .fsutil import atomic_write_text
 from .jobs import RenderJob
 from .transport import ProcResult, Transport, TransportError
 
@@ -190,9 +191,9 @@ def build_bundle(
 
     assets_payload = manifest(assets)
     assets_payload["bundled"] = bundled_assets
-    (bundle / BUNDLE_ASSETS).write_text(
+    atomic_write_text(
+        bundle / BUNDLE_ASSETS,
         json.dumps(assets_payload, indent=2, ensure_ascii=True) + "\n",
-        encoding="utf-8",
     )
     _register(BUNDLE_ASSETS, bundle / BUNDLE_ASSETS)
 
