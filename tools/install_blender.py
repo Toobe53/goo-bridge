@@ -49,7 +49,9 @@ def download(url: str, destination: Path) -> None:
 
 
 def _find(root: Path, name: str) -> Path:
-    matches = sorted(root.rglob(name))
+    # ``rglob("blender")`` also matches the add-on directory
+    # ``.../io_scene_gltf2/blender``; only regular files are executables.
+    matches = sorted(path for path in root.rglob(name) if path.is_file())
     if not matches:
         raise RuntimeError(f"{name} not found under {root}")
     return matches[0]
